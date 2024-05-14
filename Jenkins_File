@@ -1,0 +1,74 @@
+pipeline{
+    agent any
+    tools {
+        // Specify the Maven installation
+        maven 'maven-3.9.6'
+    }
+    
+    environment{
+        SCANNER_HOME= tool 'Sonar'
+    }
+    stages{
+        stage('checkout'){
+            steps{
+                git branch: 'main', url: 'https://github.com/dipak345/Ekart.git' 
+            }
+        }
+        
+        stage('Compile'){
+            steps{
+                sh "mvn compile"
+            }
+        }
+        
+        stage('OWASP'){
+            steps{
+               dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'OWASP'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        
+        stage('Sonar Analysis') {
+            steps {
+                   sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.url=http://34.228.42.66:9000 -Dsonar.login=squ_2cbc2f0b787d1d85b8f98d0a881e562e533a2a0a -Dsonar.projectName=EKRT \
+                   -Dsonar.java.binaries=. \
+                   -Dsonar.projectKey=EKRT '''
+               }
+            }
+        
+        stage('Build'){
+            steps{
+                sh "mvn package -DskipTests=true"
+            }
+        }
+        
+        stage('Docker Build'){
+            steps{
+                sh "docker build -t ekart_app -f docker/Dockerfile ."
+            }
+        }
+        stage("Trivy"){
+            steps{
+                sh "trivy image ekart_app"
+            }
+        }
+        
+        stage('Docker Push Image'){
+           steps{
+                withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'pwd', usernameVariable: 'uname')]) {
+                sh "docker tag ekart_app ${env.uname}/ekart_app:latest"
+                sh "docker login -u ${env.uname} -p${env.pwd}"
+                sh "docker push ${env.uname}/ekart_app:latest"
+            }
+          }
+        }
+        
+        stage('docker-deploy'){
+            steps{
+                //sh "docker run -itd -p 8000:8000 dipakkhilare567/nodejs_app:latest"
+                echo "App Deployed Successfully"
+            }
+        }
+       
+    }
+} 
