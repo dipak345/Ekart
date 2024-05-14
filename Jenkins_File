@@ -65,7 +65,7 @@ pipeline{
         
         stage('docker-deploy'){
             steps{
-                //sh "docker run -itd -p 8000:8000 dipakkhilare567/nodejs_app:latest"
+                 sh "docker run -itd -p 8070:8070 dipakkhilare567/ekart_app:latest"
                 echo "App Deployed Successfully"
             }
         }
