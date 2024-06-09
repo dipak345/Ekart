@@ -2,7 +2,7 @@ pipeline{
     agent any
     tools {
         // Specify the Maven installation
-        maven 'maven-3.9.6'
+        maven 'maven-3.9.7'
     }
     
     environment{
@@ -30,11 +30,13 @@ pipeline{
         
         stage('Sonar Analysis') {
             steps {
-                   sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.url=http://34.228.42.66:9000 -Dsonar.login=squ_2cbc2f0b787d1d85b8f98d0a881e562e533a2a0a -Dsonar.projectName=EKRT \
+                withSonarQubeEnv('sonar') {
+                sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.url=http://18.209.66.194:9000 -Dsonar.login=squ_1c35ffaecc5a2c76d611a91759721b5bbc83020d -Dsonar.projectName=EKART \
                    -Dsonar.java.binaries=. \
-                   -Dsonar.projectKey=EKRT '''
-               }
-            }
+                   -Dsonar.projectKey=EKART '''   
+            }  
+        }
+        }
         
         stage('Build'){
             steps{
